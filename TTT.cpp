@@ -17,7 +17,8 @@ Goal State: End when 3 in a row, Horiz, Vert, Diag
 
 const int BOARD_SIZE = 3;
 const int WINNER_SIZE = BOARD_SIZE*2+2;
-const int DEBUG = true;
+const int DEBUG = false;
+const int TIMING = true;
 void printBoard(int[BOARD_SIZE][BOARD_SIZE]);
 void numToXY(int, int&, int&);
 void promptMove(int &, int&);
@@ -33,6 +34,7 @@ bool checkWinner(int [WINNER_SIZE], int);
 #include <iostream>
 #include <cstring>
 #include <cmath>
+#include <time.h>
 using namespace std;
 
 int main(){
@@ -71,7 +73,10 @@ int main(){
 		gameLoop(board, winner, false, 10, 0, false);
 	}else{
 		int retx, rety;//    placeholders
+		clock_t t = clock();
 		pickNext(board, winner, 0, 0, true, 10 , 0, retx, rety, true);
+		t = clock() - t;
+		cerr << "\n" << ((float)t)/CLOCKS_PER_SEC << endl;
 		cout << XYToNum(retx, rety);
 		updateBoard(board, winner, retx, rety, true);
 		gameLoop(board, winner, true, 10, 1, true);
