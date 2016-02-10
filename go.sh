@@ -1,2 +1,2 @@
-g++ TTT.cpp
-./a.out
+g++ -std=c++11 TTTBitBoard.cpp
+./a.out 

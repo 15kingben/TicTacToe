@@ -1,6 +1,5 @@
 #include <stdio.h>
-#include <cstdint>
-
+#include <bitset>
 /*State: 2D array of board
 initiative
 
@@ -16,18 +15,32 @@ Goal State: End when 3 in a row, Horiz, Vert, Diag
 
 */
 
+const int BOARD_SIZE = 3;
+const int WINNER_SIZE = BOARD_SIZE*2+2;
+const int DEBUG = false;
+const int TIMING = true;
+//typedef uint64_t board;
+void printBoard(int[BOARD_SIZE][BOARD_SIZE]);
+void numToXY(int, int&, int&);
+uint64_t promptMove(int &, int&);
+void updateBoard(uint64_t &boardX, uint64_t &boardY, int[WINNER_SIZE], int , int , uint64_t , bool);
+void printWinners(int [WINNER_SIZE]);
+int pickNext(uint64_t , uint64_t , int winner[WINNER_SIZE],  int x, int y, bool isPlayer, int maxDepth, int pieces, int &retx, int &rety	, bool isX);
+int updateWinner(int[WINNER_SIZE]);
+int XYToNum(int, int);
+void gameLoop(uint64_t , uint64_t , int winner[WINNER_SIZE], bool maximize, int maxDepth, int pieces, bool isX);
+bool checkWinner(int [WINNER_SIZE], int);
+uint64_t moveToBitboard(int );
 
-#include "TTT.h"
 #include <iostream>
 #include <cstring>
 #include <cmath>
 #include <time.h>
-#include <algorithm>
 using namespace std;
 
 int main(){
-	uint64_t xBoard = 0;
-	uint64_t oBoard = 0;
+	uint64_t boardX = 0;
+	uint64_t boardY = 0;
 
 	cerr << "Pick a side: ('X' or 'O' )" << endl;
 	char side;
@@ -52,25 +65,24 @@ int main(){
 	//0-2: horiz
 	//3-5: vert
 	//6-7: diag
-	//int winner[BOARD_SIZE*2 + 2] = {0};
-
-	Board b = new Board();
+	int winner[BOARD_SIZE*2 + 2] = {0};
 
 	int posx, posy;
 	bool maximize = false;
 
 	if(side == 'x' || side == 'X'){
-		gameLoop(board, winner, false, 10, 0, false);
+		gameLoop(boardX, boardY, winner, false, 10, 0, false);
 	}else{
 		int retx, rety;//    placeholders
 		clock_t t = clock();
 		for(int i = 0; i < 100; i++)
-		pickNext(board, winner, 0, 0, true, 10 , 0, retx, rety, true, -100, 100 );
+		pickNext(boardX, boardY, winner, 0, 0, true, 10 , 0, retx, rety, true);
+
 		t = clock() - t;
 		cerr << "\n" << ((float)t)/CLOCKS_PER_SEC << endl;
 		cout << XYToNum(retx, rety);
-		updateBoard(board, winner, retx, rety, true);
-		gameLoop(board, winner, true, 10, 1, true);
+		updateBoard(boardX, boardY, winner, retx, rety, 1 << (BOARD_SIZE*retx + rety),true);
+		gameLoop(boardX, boardY, winner, true, 10, 1, true);
 	}
 
 
@@ -84,29 +96,25 @@ int main(){
 
 int counter = 0;
 
-void promptMove( int &x, int & y, int board[BOARD_SIZE][BOARD_SIZE]){
+uint64_t promptMove( int &x, int & y){
 	cerr << "Please make a move: (1-9)" << endl;
 	int move;
 	cin >> move;
-
-	int retx, rety;
-	numToXY(move, retx, rety);
-
-	while((!(abs(move-1) < 9)) || board[retx][rety] != -1 ){
-
-
-		cerr << "Invalid: Please make a move: (1-9)" << endl;
+	while(!(abs(move-1) < 9)){
+		cerr << "Please make a move: (1-9)" << endl;
 		cin >> move;
-		numToXY(move, retx, rety);
 	}
+	uint64_t m = moveToBitboard(move);
 	numToXY(move, x, y);
+	return m;
 }
 
 
-void gameLoop(int board[BOARD_SIZE][BOARD_SIZE], int winner[WINNER_SIZE], bool maximize, int maxDepth, int pieces, bool isX){
+void gameLoop(uint64_t boardX, uint64_t boardY, int winner[WINNER_SIZE], bool maximize, int maxDepth, int pieces, bool isX){
 	int posx, posy;
-	promptMove(posx, posy, board);
-	updateBoard(board, winner, posx, posy, !isX);
+	uint64_t move = promptMove(posx, posy);
+	updateBoard(boardX, boardY, winner, posx, posy, move, !isX);
+	//if(DEBUG)(board);
 	++pieces;
 	if(checkWinner(winner, pieces)){
 		return;
@@ -115,16 +123,16 @@ void gameLoop(int board[BOARD_SIZE][BOARD_SIZE], int winner[WINNER_SIZE], bool m
 
 
 	int retx, rety;
-	pickNext(board, winner, posx, posy, maximize, maxDepth , pieces, retx, rety, isX, -100, 100);
+	pickNext(boardX, boardY, winner, posx, posy, maximize, maxDepth , pieces, retx, rety, isX);
 	cout << XYToNum(retx, rety);
-	if(DEBUG){printBoard(board);}
-	updateBoard(board, winner, retx, rety, isX);
-++pieces;
+	//if(DEBUG){printBoard(board);}
+	uint64_t imove = 1 << (BOARD_SIZE*retx + rety);
+	updateBoard(boardX, boardY, winner, retx, rety,imove,isX);
 	if(checkWinner(winner, pieces)){
 		return;
 	}
-
-	gameLoop(board, winner, maximize, maxDepth, pieces, isX);
+	++pieces;
+	gameLoop(boardX, boardY, winner, maximize, maxDepth, pieces, isX);
 }
 
 
@@ -133,7 +141,7 @@ void gameLoop(int board[BOARD_SIZE][BOARD_SIZE], int winner[WINNER_SIZE], bool m
 
 
 bool checkWinner(int winner[WINNER_SIZE], int pieces){
-	if(pieces >= 9){
+	if(pieces >= BOARD_SIZE*BOARD_SIZE){
 		cerr << "it's a draw";
 	}if(updateWinner(winner) == 1){
 			cerr << "I Win";
@@ -148,9 +156,10 @@ bool checkWinner(int winner[WINNER_SIZE], int pieces){
 }
 
 
-int pickNext(int board[BOARD_SIZE][BOARD_SIZE], int winner[WINNER_SIZE], int x, int y, bool maximize, int maxDepth, int pieces, int &retx, int &rety, bool isX, int alpha, int beta	){
-	if(DEBUG)
-	cout << ++counter << " maximize: " << maximize << endl;
+int pickNext(uint64_t boardX, uint64_t boardY, int winner[WINNER_SIZE], int x, int y, bool maximize, int maxDepth, int pieces, int &retx, int &rety, bool isX	){
+	//if(DEBUG){
+	//cout << ++counter << " maximize: " << maximize << endl;
+	//cerr << bitset<32>{boardX} << " \n" << bitset<32>{boardY} << endl;}
 	int winnerValue = updateWinner(winner);
 
 	//char c;
@@ -163,55 +172,38 @@ int pickNext(int board[BOARD_SIZE][BOARD_SIZE], int winner[WINNER_SIZE], int x, 
 	//The Minimax part
 	int m = (maximize) ? 1 : -1;
 
-	int scoreMax = -2;//lower than any possible move
+	int max = -2;//lower than any possible move
 
 	for(int i = 0; i < BOARD_SIZE; i++){
 		for(int j = 0; j < BOARD_SIZE; j++){
+			int move = BOARD_SIZE*i + j;
+			uint64_t imove = 1 << (move );
+			uint64_t actions = boardX | boardY;
+			if((actions | imove) != actions){//will never not occur because of pieces variable
 
-			if(board[i][j] == -1){//will never not occur because of pieces variable
-
-				updateBoard(board, winner, i, j, isX);
+				//copy
+				int newWinner[WINNER_SIZE];
+				memcpy(newWinner, winner, sizeof(int) * (WINNER_SIZE));
+				uint64_t newBoardX = boardX; uint64_t newBoardY = boardY;
+				updateBoard(newBoardX, newBoardY, newWinner, i, j, imove, isX);
 				int retx2, rety2;
-				int newMax = m * pickNext( board, winner,i,j,!maximize , maxDepth - 1, pieces+1, retx2, rety2, !isX, alpha, beta);
+				int newMax = m * pickNext( newBoardX, newBoardY, newWinner,i,j,!maximize , maxDepth - 1, pieces+1, retx2, rety2, !isX);
 
-				undoBoard(board, winner, i, j , isX);
-
-				if(newMax > scoreMax){
-					scoreMax = newMax;
+				if(newMax > max){
+					max = newMax;
 					retx = i;
 					rety = j;
 				}
-
-				if(maximize){
-					alpha = max(alpha, newMax);
-					if(beta <= alpha){
-						goto ABSKIP; // fight me
-					}
-				}else{
-					beta = min(-1*newMax, beta);
-					if(beta <= alpha){
-						goto ABSKIP;
-					}
-
-				}
-
-
-
 			}
 
 
 		}
 	}
-
-
-
-	if(DEBUG){
-		cout << m*scoreMax << ": " << pieces << " " << retx << " " << rety << " " << alpha << " " << beta << endl;
-		printBoard(board);
-	}
-
-	ABSKIP:
-	return m*scoreMax;
+	//if(DEBUG){
+	//	cout << m*max << ": " << pieces << " " << retx << " " << rety << endl;
+		//printBoard(board);
+	//}
+	return m*max;
 }
 
 
@@ -229,13 +221,17 @@ int pickNext(int board[BOARD_SIZE][BOARD_SIZE], int winner[WINNER_SIZE], int x, 
 //0 = draw
 //-1 = Enemy win
 //null: nonterminal
-int updateBoard(int board[BOARD_SIZE][BOARD_SIZE], int winner[WINNER_SIZE], int x, int y, bool isX){
-	board[x][y] = (isX) ? 1 : 0;
+void updateBoard(uint64_t &boardX, uint64_t &boardY, int winner[WINNER_SIZE], int x, int y, uint64_t move, bool isX){
 
-	if(DEBUG)printBoard(board);
+	if(isX)
+		boardX = boardX | move;
+	else
+		boardY = boardY | move;
+
+	//if(DEBUG)printBoard(board);
 
 	int d = (isX) ? 1 : -1;
-	winner[3+x]+= d;
+	winner[BOARD_SIZE+x]+= d;
 	winner[y]+= d;
 	if(y==x){
 		winner[BOARD_SIZE*2]+= d;
@@ -248,31 +244,14 @@ int updateBoard(int board[BOARD_SIZE][BOARD_SIZE], int winner[WINNER_SIZE], int 
 }
 
 
-void undoBoard(int board[BOARD_SIZE][BOARD_SIZE], int winner[WINNER_SIZE], int x, int y, bool isX){
-	board[x][y] = -1;
-
-
-	int d = (isX) ? -1 : 1;
-	winner[3+x]+= d;
-	winner[y]+= d;
-	if(y==x){
-		winner[BOARD_SIZE*2]+= d;
-	}
-	if(y==0 && x==2 || y == 2 && x == 0 || ( y == 1 && x == 1)){
-		winner[BOARD_SIZE*2+1]+= d;
-	}
-
-}
-
-
 //update winner array based on move
 //if isPlayer, add, else subtract
 int updateWinner(int winner[WINNER_SIZE]){
 	for(int i = 0; i < WINNER_SIZE; i++){
-		if(winner[i] >= 3){//X's
+		if(winner[i] >= BOARD_SIZE){//X's
 			return 1;
 		}
-		if(winner[i] <= -3){//O's
+		if(winner[i] <= BOARD_SIZE*-1){//O's
 			return -1;
 		}
 	}
@@ -280,7 +259,11 @@ int updateWinner(int winner[WINNER_SIZE]){
 }
 
 
-
+inline uint64_t moveToBitboard(int move){
+	uint64_t ret = 1;
+	ret = ret << (move-1);
+	return ret;
+}
 
 
 
@@ -341,10 +324,6 @@ void numToXY(int num, int &retx, int &rety){
 			retx = 2;
 			rety = 2;
 			break;
-		default:
-			retx = -1;
-			rety = -1;
-
 	}
 }
 
