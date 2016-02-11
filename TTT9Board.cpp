@@ -76,7 +76,7 @@ int main(){
 	bool maximize = false;
 
 	if(side == 'o' || side == 'O'){
-		gameLoop(boardList, false, 12, 0, false, 0, -1);//maxdepth = 13
+		gameLoop(boardList, false, 13, 0, false, 0, -1);//maxdepth = 13
 	}else{
 		//int retx, rety;//    placeholders
 		//clock_t t = clock();
@@ -85,9 +85,9 @@ int main(){
 		//pickNext(boardList, 0, 0, true, 10 , 0, retx, rety, true, -3000, 3000 , 0, retBoard, 0, 5);
 		//t = clock() - t;
 		//cerr << "\n" << ((float)t)/CLOCKS_PER_SEC << "\n";
-		cout << 5 << " " << 5 << flush;
+		cout << 5 << " " << 5 << endl;
 		updateBoard(boardList[4], 1, 1, true);
-		gameLoop(boardList, true, 6, 1, true, 4, 5);//4, 5 are hardwired from move 5 5
+		gameLoop(boardList, true, 13, 1, true, 4, 5);//4, 5 are hardwired from move 5 5
 	}
 
 
@@ -138,7 +138,7 @@ void gameLoop(Board boardList[BOARD_SIZE*BOARD_SIZE], bool maximize, int maxDept
 	int nextBoard = XYToNum(posx, posy) - 1;
 	int retx, rety, retBoard;
 	pickNext(boardList, posx, posy, maximize, maxDepth , totalPieces, retx, rety, isX, -3000, 3000, nextBoard, retBoard, heuristicSum, 5);
-	cout  << " " << nextBoard+1 << " " << XYToNum(retx, rety) << endl;
+	cout  << nextBoard+1 << " " << XYToNum(retx, rety) << endl;
 	cerr << "\n";
 	heuristicSum+=updateBoard(boardList[nextBoard], retx, rety, isX);
 	if(DEBUG){cerr<<"\n";}
@@ -263,7 +263,7 @@ int pickNext(Board boardList[BOARD_SIZE*BOARD_SIZE], int x, int y, bool maximize
 //0 = draw
 //-1 = Enemy win
 //null: nonterminal
-/*int updateBoard(Board & b, int x, int y, bool isX){
+int updateBoard(Board & b, int x, int y, bool isX){
 	b.board[x][y] = (isX) ? 1 : 0;
 	int hTotal;
 	//if(DEBUG)printBoard(b.board);
@@ -327,8 +327,8 @@ int pickNext(Board boardList[BOARD_SIZE*BOARD_SIZE], int x, int y, bool maximize
 	b.hSum+=total;
 	return total;
 
-}*/
-
+}
+/*
 int updateBoard(Board & b, int x, int y, bool isX){
 	b.board[x][y] = (isX) ? 1 : 0;
 	int hTotal;
@@ -354,7 +354,7 @@ int updateBoard(Board & b, int x, int y, bool isX){
 	b.hSum+=total;
 	return total;
 
-}
+}*/
 
 
 
