@@ -21,6 +21,7 @@ Goal State: End when 3 in a row, Horiz, Vert, Diag
 #include <cmath>
 #include <time.h>
 #include <algorithm>
+
 using namespace std;
 
 const int DEBUG = false;
@@ -30,8 +31,10 @@ const int TIMING = true;
 int main(){
 	uint64_t xBoard = 0;
 	uint64_t oBoard = 0;
+	setbuf(stdout, NULL);
+	setvbuf (stdout, NULL, _IONBF, BUFSIZ);
 
-	cerr << "Pick a side: ('X' or 'O' )" << "\n";
+	//cerr << "Pick a side: ('X' or 'O' )" << "\n";
 	char side;
 	cin >> side;
 	while(side != 'X' && side != 'O' && side != 'x' && side!= 'o'){
@@ -39,7 +42,7 @@ int main(){
 		cin >> side;
 	}
 
-	cerr << "You have chosen " << ((side == 'x' || side == 'X') ? "X" : "O") << " as your side." << "\n";
+	//cerr << "You have chosen " << ((side == 'x' || side == 'X') ? "X" : "O") << " as your side." << "\n";
 
 	//Array of Board, Initialized to Blank
 	//-1 = Empty
@@ -72,19 +75,19 @@ int main(){
 	int posx, posy;
 	bool maximize = false;
 
-	if(side == 'x' || side == 'X'){
-		gameLoop(boardList, false, 10, 0, false, 0, -1);
+	if(side == 'o' || side == 'O'){
+		gameLoop(boardList, false, 12, 0, false, 0, -1);//maxdepth = 13
 	}else{
-		int retx, rety;//    placeholders
-		clock_t t = clock();
+		//int retx, rety;//    placeholders
+		//clock_t t = clock();
 		//for(int i = 0; i < 100; i++)
-		int retBoard;
-		pickNext(boardList, 0, 0, true, 10 , 0, retx, rety, true, -3000, 3000 , 0, retBoard, 0, 5);
-		t = clock() - t;
-		cerr << "\n" << ((float)t)/CLOCKS_PER_SEC << "\n";
-		cout << XYToNum(retx, rety);
-		updateBoard(boardList[0], retx, rety, true);
-		gameLoop(boardList, true, 10, 1, true, 0, -1);
+		//int retBoard;
+		//pickNext(boardList, 0, 0, true, 10 , 0, retx, rety, true, -3000, 3000 , 0, retBoard, 0, 5);
+		//t = clock() - t;
+		//cerr << "\n" << ((float)t)/CLOCKS_PER_SEC << "\n";
+		cout << 5 << " " << 5 << flush;
+		updateBoard(boardList[4], 1, 1, true);
+		gameLoop(boardList, true, 6, 1, true, 4, 5);//4, 5 are hardwired from move 5 5
 	}
 
 
@@ -135,7 +138,7 @@ void gameLoop(Board boardList[BOARD_SIZE*BOARD_SIZE], bool maximize, int maxDept
 	int nextBoard = XYToNum(posx, posy) - 1;
 	int retx, rety, retBoard;
 	pickNext(boardList, posx, posy, maximize, maxDepth , totalPieces, retx, rety, isX, -3000, 3000, nextBoard, retBoard, heuristicSum, 5);
-	cout  << " " << nextBoard+1 << " " << XYToNum(retx, rety);
+	cout  << " " << nextBoard+1 << " " << XYToNum(retx, rety) << endl;
 	cerr << "\n";
 	heuristicSum+=updateBoard(boardList[nextBoard], retx, rety, isX);
 	if(DEBUG){cerr<<"\n";}
@@ -158,10 +161,10 @@ bool checkWinner(Board & b, int totalPieces){
 	if(totalPieces >= 81){
 		cerr << "it's a draw";
 	}if(updateWinner(b) == 1000){
-			cerr << "I Win";
+			cerr << "X Wins";
 			return true;
 		}else if(updateWinner(b) == -1000){
-			cerr << "I Lose";
+			cerr << "O Wins";
 			return true;
 		}else{
 			return false;
@@ -172,7 +175,7 @@ bool checkWinner(Board & b, int totalPieces){
 
 int pickNext(Board boardList[BOARD_SIZE*BOARD_SIZE], int x, int y, bool maximize, int maxDepth, int totalPieces, int &retx, int &rety, bool isX, int alpha, int beta, int boardPick, int & retBoard, int heuristicSum, int prevBoard	){
 	if(DEBUG)
-	cout << ++counter << " maximize: " << maximize << "\n";
+	cerr << ++counter << " maximize: " << maximize << "\n";
 	int winnerValue = updateWinner(boardList[prevBoard]);
 
 	//char c;
@@ -260,6 +263,72 @@ int pickNext(Board boardList[BOARD_SIZE*BOARD_SIZE], int x, int y, bool maximize
 //0 = draw
 //-1 = Enemy win
 //null: nonterminal
+/*int updateBoard(Board & b, int x, int y, bool isX){
+	b.board[x][y] = (isX) ? 1 : 0;
+	int hTotal;
+	//if(DEBUG)printBoard(b.board);
+	int htotal = 0;
+	int d = (isX) ? 1 : -1;
+	int total = 0;
+	bool flagA= false;bool flagB = false; bool flagC  = false;bool flagD = false;
+
+	if(b.winner[3+x] * d == -2){
+		total += 2*d;
+		flagA = true;
+	}
+	b.winner[3+x]+= d;
+	if(b.winner[3+x] == 2*d){
+		total += 2*d;
+		flagA = true;
+	}
+	if(!flagA)
+		total += d;
+
+
+	if(b.winner[y] * d == -2){
+		total += 2*d;
+		flagB = true;
+	}
+	b.winner[y]+= d;
+	if(b.winner[y] == 2*d){
+		total += 2*d;
+		flagB = true;
+	}
+	if(!flagB)
+		total+=d;
+
+
+
+	if(y==x){
+		if(b.winner[BOARD_SIZE*2] * d == -2){
+			total += 2*d;
+			flagC = true;
+		}
+		b.winner[BOARD_SIZE*2]+= d;
+		if(b.winner[BOARD_SIZE*2] == 2*d){
+			total += 2*d;
+			flagC = true;
+		}
+		if(!flagC) total+=d;
+	}
+	if(y==0 && x==2 || y == 2 && x == 0 || ( y == 1 && x == 1)){
+		if(b.winner[BOARD_SIZE*2+1] * d == -2){
+			total += 2*d;
+			flagD = true;
+		}
+		b.winner[BOARD_SIZE*2+1]+= d;
+		if(b.winner[BOARD_SIZE*2+1] == 2*d){
+			total += 2*d;
+			flagD = true;
+		}
+		if(!flagD) total+=d;
+	}
+	//if(DEBUG)printWinners(b.winner);
+	b.hSum+=total;
+	return total;
+
+}*/
+
 int updateBoard(Board & b, int x, int y, bool isX){
 	b.board[x][y] = (isX) ? 1 : 0;
 	int hTotal;
@@ -268,7 +337,7 @@ int updateBoard(Board & b, int x, int y, bool isX){
 	int d = (isX) ? 1 : -1;
 	int total = 0;
 	b.winner[3+x]+= d;
-	if(winner[3+x] == 2){
+	if(b.winner[3+x] == 2){
 		hTotal += 2;
 	}
 	b.winner[y]+= d;
@@ -286,6 +355,12 @@ int updateBoard(Board & b, int x, int y, bool isX){
 	return total;
 
 }
+
+
+
+
+
+
 
 
 void undoBoard(Board & b, int x, int y, bool isX){
@@ -375,6 +450,7 @@ void printBigBoard(Board boardList[BOARD_SIZE*BOARD_SIZE]){
 			}
 			cerr << "\n";
 		}
+
 		cerr << "\n";
 }
 
@@ -483,9 +559,9 @@ int XYToNum(int x, int y){
 }
 
 void printWinners(int w[WINNER_SIZE]){
-	cout << "\n";
+	cerr << "\n";
 	for(int i = 0; i < WINNER_SIZE; i++){
-		cout << " " << w[i] << " " ;
+		cerr << " " << w[i] << " " ;
 	}
-	cout << "\n";
+	cerr << "\n";
 }
