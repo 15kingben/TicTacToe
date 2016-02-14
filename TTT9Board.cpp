@@ -76,7 +76,7 @@ int main(){
 	bool maximize = false;
 
 	if(side == 'o' || side == 'O'){
-		gameLoop(boardList, false, 12, 0, false, 0, -1);//maxdepth = 13
+		gameLoop(boardList, false, 13, 0, false, 0, -1);//maxdepth = 13
 	}else{
 		//int retx, rety;//    placeholders
 		//clock_t t = clock();
@@ -87,7 +87,7 @@ int main(){
 		//cerr << "\n" << ((float)t)/CLOCKS_PER_SEC << "\n";
 		cout << 5 << " " << 5 << endl;
 		updateBoard(boardList[4], 1, 1, true);
-		gameLoop(boardList, true, 9, 1, true, 4, 5);//4, 5 are hardwired from move 5 5
+		gameLoop(boardList, true, 13, 1, true, 4, 5);//4, 5 are hardwired from move 5 5
 	}
 
 
@@ -158,14 +158,14 @@ void gameLoop(Board boardList[BOARD_SIZE*BOARD_SIZE], bool maximize, int maxDept
 
 
 bool checkWinner(Board & b, int totalPieces){
-	if(totalPieces >= 81){
-		cerr << "it's a draw";
-	}if(updateWinner(b) == 1000){
+	if(updateWinner(b) == 1000){
 			cerr << "X Wins";
 			return true;
 		}else if(updateWinner(b) == -1000){
 			cerr << "O Wins";
 			return true;
+		}else if(totalPieces >= 81){
+			cerr << "it's a draw";
 		}else{
 			return false;
 		}

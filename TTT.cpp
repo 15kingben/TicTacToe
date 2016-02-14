@@ -26,8 +26,6 @@ Goal State: End when 3 in a row, Horiz, Vert, Diag
 using namespace std;
 
 int main(){
-	uint64_t xBoard = 0;
-	uint64_t oBoard = 0;
 
 	cerr << "Pick a side: ('X' or 'O' )" << endl;
 	char side;
@@ -43,7 +41,7 @@ int main(){
 	//-1 = Empty
 	// 0 = "0"
 	// 1 = "X"             top     middle      bottom
-	//int board[3][3] = {{-1,-1,-1},{-1,-1,-1},{-1,-1,-1}};
+	int board[3][3] = {{-1,-1,-1},{-1,-1,-1},{-1,-1,-1}};
 
 	//Array of Places on Board Still Open
 	//bool actions[3][3] = {{true,true,true},{true,true,true}, {true,true,true}};
@@ -52,9 +50,8 @@ int main(){
 	//0-2: horiz
 	//3-5: vert
 	//6-7: diag
-	//int winner[BOARD_SIZE*2 + 2] = {0};
+	int winner[BOARD_SIZE*2 + 2] = {0};
 
-	Board b = new Board();
 
 	int posx, posy;
 	bool maximize = false;
@@ -63,11 +60,11 @@ int main(){
 		gameLoop(board, winner, false, 10, 0, false);
 	}else{
 		int retx, rety;//    placeholders
-		clock_t t = clock();
-		for(int i = 0; i < 100; i++)
+		//clock_t t = clock();
+		//for(int i = 0; i < 100; i++)
 		pickNext(board, winner, 0, 0, true, 10 , 0, retx, rety, true, -100, 100 );
-		t = clock() - t;
-		cerr << "\n" << ((float)t)/CLOCKS_PER_SEC << endl;
+		//t = clock() - t;
+		//cerr << "\n" << ((float)t)/CLOCKS_PER_SEC << endl;
 		cout << XYToNum(retx, rety);
 		updateBoard(board, winner, retx, rety, true);
 		gameLoop(board, winner, true, 10, 1, true);
@@ -119,7 +116,7 @@ void gameLoop(int board[BOARD_SIZE][BOARD_SIZE], int winner[WINNER_SIZE], bool m
 	cout << XYToNum(retx, rety);
 	if(DEBUG){printBoard(board);}
 	updateBoard(board, winner, retx, rety, isX);
-++pieces;
+	++pieces;
 	if(checkWinner(winner, pieces)){
 		return;
 	}
@@ -133,13 +130,14 @@ void gameLoop(int board[BOARD_SIZE][BOARD_SIZE], int winner[WINNER_SIZE], bool m
 
 
 bool checkWinner(int winner[WINNER_SIZE], int pieces){
-	if(pieces >= 9){
-		cerr << "it's a draw";
-	}if(updateWinner(winner) == 1){
+	if(updateWinner(winner) == 1){
 			cerr << "I Win";
 			return true;
 		}else if(updateWinner(winner) == -1){
 			cerr << "I Lose";
+			return true;
+		}else if(pieces >= 9){
+			cerr << "it's a draw";
 			return true;
 		}else{
 			return false;
