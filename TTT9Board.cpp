@@ -76,7 +76,7 @@ int main(){
 	bool maximize = false;
 
 	if(side == 'o' || side == 'O'){
-		gameLoop(boardList, false, 13, 0, false, 0, -1);//maxdepth = 13
+		gameLoop(boardList, false, 12, 0, false, 0, -1);//maxdepth = 13
 	}else{
 		//int retx, rety;//    placeholders
 		//clock_t t = clock();
@@ -87,7 +87,7 @@ int main(){
 		//cerr << "\n" << ((float)t)/CLOCKS_PER_SEC << "\n";
 		cout << 5 << " " << 5 << endl;
 		updateBoard(boardList[4], 1, 1, true);
-		gameLoop(boardList, true, 13, 1, true, 4, 5);//4, 5 are hardwired from move 5 5
+		gameLoop(boardList, true, 9, 1, true, 4, 5);//4, 5 are hardwired from move 5 5
 	}
 
 
@@ -263,22 +263,24 @@ int pickNext(Board boardList[BOARD_SIZE*BOARD_SIZE], int x, int y, bool maximize
 //0 = draw
 //-1 = Enemy win
 //null: nonterminal
+const int factor = 3;
 int updateBoard(Board & b, int x, int y, bool isX){
 	b.board[x][y] = (isX) ? 1 : 0;
 	int hTotal;
 	//if(DEBUG)printBoard(b.board);
+
 	int htotal = 0;
 	int d = (isX) ? 1 : -1;
 	int total = 0;
 	bool flagA= false;bool flagB = false; bool flagC  = false;bool flagD = false;
 
 	if(b.winner[3+x] * d == -2){
-		total += 2*d;
+		total += factor*d;
 		flagA = true;
 	}
 	b.winner[3+x]+= d;
 	if(b.winner[3+x] == 2*d){
-		total += 2*d;
+		total += factor*d;
 		flagA = true;
 	}
 	if(!flagA)
@@ -286,12 +288,12 @@ int updateBoard(Board & b, int x, int y, bool isX){
 
 
 	if(b.winner[y] * d == -2){
-		total += 2*d;
+		total += factor*d;
 		flagB = true;
 	}
 	b.winner[y]+= d;
 	if(b.winner[y] == 2*d){
-		total += 2*d;
+		total += factor*d;
 		flagB = true;
 	}
 	if(!flagB)
@@ -301,27 +303,29 @@ int updateBoard(Board & b, int x, int y, bool isX){
 
 	if(y==x){
 		if(b.winner[BOARD_SIZE*2] * d == -2){
-			total += 2*d;
+			total += factor*d;
 			flagC = true;
 		}
 		b.winner[BOARD_SIZE*2]+= d;
 		if(b.winner[BOARD_SIZE*2] == 2*d){
-			total += 2*d;
+			total += factor*d;
 			flagC = true;
 		}
-		if(!flagC) total+=d;
+		if(!flagC)
+		total+=d;
 	}
 	if(y==0 && x==2 || y == 2 && x == 0 || ( y == 1 && x == 1)){
 		if(b.winner[BOARD_SIZE*2+1] * d == -2){
-			total += 2*d;
+			total += factor*d;
 			flagD = true;
 		}
 		b.winner[BOARD_SIZE*2+1]+= d;
 		if(b.winner[BOARD_SIZE*2+1] == 2*d){
-			total += 2*d;
+			total += factor*d;
 			flagD = true;
 		}
-		if(!flagD) total+=d;
+		if(!flagD)
+		total+=d;
 	}
 	//if(DEBUG)printWinners(b.winner);
 	b.hSum+=total;
